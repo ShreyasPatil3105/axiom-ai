@@ -35,3 +35,27 @@ class Verdict(BaseModel):
     items: list[Union[CodeItem, ClaimItem]]
     generated_at: datetime = datetime.utcnow()
     verdict_hash: Optional[str] = None
+    integration_report: Optional[IntegrationReport] = None  # Engine A2, populated for code artefacts with repo URL
+
+
+class CallSiteCheck(BaseModel):
+    id: str
+    file_path: str
+    line_number: int
+    call_expression: str
+    status: Literal["COMPATIBLE", "SIGNATURE_MISMATCH", "SIDE_EFFECT_CHANGED", "UNRESOLVED_DYNAMIC"]
+    detail: str
+    reproducible_command: str
+
+
+class IntegrationReport(BaseModel):
+    audit_trail_id: str = str(uuid.uuid4())
+    repo_url: str
+    repo_commit_sha: str
+    target_function: str
+    total_files_indexed: int
+    indexing_time_seconds: float
+    total_call_sites_found: int
+    unresolved_dynamic_count: int
+    call_site_checks: list[CallSiteCheck]
+    codebase_integration_score: float
