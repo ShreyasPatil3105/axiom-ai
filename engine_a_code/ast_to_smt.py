@@ -52,48 +52,17 @@ def encode_expr(node: ast.AST) -> str:
         if op == "distinct":
             return f"(distinct {left} {right})"
         return f"({op} {left} {right})"
+    if isinstance(node, ast.IfExp):
+        cond = encode_expr(node.test)
+        then_expr = encode_expr(node.body)
+        else_expr = encode_expr(node.orelse)
+        return f"(ite {cond} {then_expr} {else_expr})"
     raise NotImplementedError(f"Unsupported expression node: {type(node)}")
 
 
-def encode_stmt(node: ast.AST) -> str:
-    """Convert a Python AST statement to SMT-LIB2 string(s)."""
-    if isinstance(node, ast.Assign):
-        target = node.targets[0].id
-        value = encode_expr(node.value)
-        return f"(assert (= {target} {value}))"
-    if isinstance(node, ast.Return):
-        value = encode_expr(node.value)
-        return f"(assert (= result {value}))"
-    if isinstance(node, ast.If):
-        cond = encode_expr(node.test)
-        then_stmts = [encode_stmt(s) for s in node.body]
-        else_stmts = [encode_stmt(s) for s in node.orelse] if node.orelse else []
-        then_part = "\n  ".join(then_stmts)
-        else_part = "\n  ".join(else_stmts) if else_stmts else "(assert true)"
-        return f"(ite {cond}\n  {then_part}\n  {else_part})"
-    if isinstance(node, ast.For):
-        # Only handle: for i in range(N): body
-        target = node.target.id
-        if not isinstance(node.iter, ast.Call) or not isinstance(node.iter.func, ast.Name):
-            raise NotImplementedError("Only 'for i in range(N)' loops supported")
-        if node.iter.func.id != "range":
-            raise NotImplementedError("Only 'for i in range(N)' loops supported")
-        if len(node.iter.args) != 1:
-            raise NotImplementedError("Only range(N) with single arg supported")
-        n = node.iter.args[0].value
-        body = "\n  ".join(encode_stmt(s) for s in node.body)
-        lines = []
-        for i in range(n):
-            lines.append(f"; iteration {i}")
-            lines.append(f"(assert (= {target} {i}))")
-            lines.append(body)
-        return "\n".join(lines)
-    raise NotImplementedError(f"Unsupported statement node: {type(node)}")
-
-
 def function_to_smt(code: str, name_prefix: str = "f") -> str:
-    """Convert a Python function to SMT-LIB2 constraints.
-    The output is a named function with parameters and a result variable."""
+    """Convert a Python function body to an SMT-LIB2 expression.
+    Handles simple arithmetic, comparisons, if/elif/else, and bounded for loops."""
     tree = ast.parse(code)
     func = tree.body[0]
     if not isinstance(func, ast.FunctionDef):
@@ -102,12 +71,63 @@ def function_to_smt(code: str, name_prefix: str = "f") -> str:
     params = [arg.arg for arg in func.args.args]
     param_str = " ".join(f"({p} Int)" for p in params)
 
-    body_stmts = "\n".join(encode_stmt(s) for s in func.body)
+    # Build the body as a nested expression
+    body_expr = stmts_to_expr(func.body)
 
-    return f"""; Function: {func.name}
-(define-fun {name_prefix} ({param_str}) Int
-  (let ((result 0))
-    {body_stmts}
-    result
-  )
-)"""
+    return f"(define-fun {name_prefix} ({param_str}) Int {body_expr})"
+
+
+def stmts_to_expr(stmts: list) -> str:
+    """Convert a list of statements to a single SMT expression using let bindings."""
+    # Build up backwards: start with the last statement's expression,
+    # wrap each previous assignment as a let binding.
+    if not stmts:
+        return "0"
+
+    # Collect assignments and find the final expression
+    bindings = []
+    final_expr = "0"
+
+    for stmt in stmts:
+        if isinstance(stmt, ast.Assign):
+            target = stmt.targets[0].id
+            value = encode_expr(stmt.value)
+            bindings.append((target, value))
+        elif isinstance(stmt, ast.Return):
+            final_expr = encode_expr(stmt.value)
+        elif isinstance(stmt, ast.If):
+            # Build ite with body expressions
+            cond = encode_expr(stmt.test)
+            then_expr = stmts_to_expr(stmt.body)
+            else_expr = stmts_to_expr(stmt.orelse) if stmt.orelse else final_expr
+            final_expr = f"(ite {cond} {then_expr} {else_expr})"
+        elif isinstance(stmt, ast.For):
+            # Unroll bounded loop: for i in range(N): body
+            target = stmt.target.id
+            if not isinstance(stmt.iter, ast.Call) or not isinstance(stmt.iter.func, ast.Name):
+                raise NotImplementedError("Only 'for i in range(N)' loops supported")
+            if stmt.iter.func.id != "range":
+                raise NotImplementedError("Only 'for i in range(N)' loops supported")
+            if len(stmt.iter.args) != 1:
+                raise NotImplementedError("Only range(N) with single arg supported")
+            n = stmt.iter.args[0].value
+            # Unroll by substituting i with 0, 1, ..., n-1
+            unrolled = []
+            for i in range(n):
+                # Replace target variable with constant i in body
+                unrolled.append(substitute_var(stmt.body, target, i))
+            final_expr = stmts_to_expr([s for sublist in unrolled for s in sublist])
+        else:
+            raise NotImplementedError(f"Unsupported statement: {type(stmt)}")
+
+    # Wrap in let bindings
+    for target, value in reversed(bindings):
+        final_expr = f"(let (({target} {value})) {final_expr})"
+
+    return final_expr
+
+
+def substitute_var(stmts: list, var_name: str, value: int) -> list:
+    """Replace all occurrences of var_name with the constant value."""
+    # We don't need complex substitution — just add an assignment binding.
+    return [ast.Assign(targets=[ast.Name(id=var_name, ctx=ast.Store())], value=ast.Constant(value=value))] + stmts
