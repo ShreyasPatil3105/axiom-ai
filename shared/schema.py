@@ -28,16 +28,6 @@ class ClaimItem(BaseModel):
     reproducible_command: str
 
 
-class Verdict(BaseModel):
-    audit_trail_id: str = str(uuid.uuid4())
-    artefact_type: Literal["code", "claim_set"]
-    overall_trust_score: float
-    items: list[Union[CodeItem, ClaimItem]]
-    generated_at: datetime = datetime.utcnow()
-    verdict_hash: Optional[str] = None
-    integration_report: Optional[IntegrationReport] = None  # Engine A2, populated for code artefacts with repo URL
-
-
 class CallSiteCheck(BaseModel):
     id: str
     file_path: str
@@ -59,3 +49,13 @@ class IntegrationReport(BaseModel):
     unresolved_dynamic_count: int
     call_site_checks: list[CallSiteCheck]
     codebase_integration_score: float
+
+
+class Verdict(BaseModel):
+    audit_trail_id: str = str(uuid.uuid4())
+    artefact_type: Literal["code", "claim_set"]
+    overall_trust_score: float
+    items: list[Union[CodeItem, ClaimItem]]
+    generated_at: datetime = datetime.utcnow()
+    verdict_hash: Optional[str] = None
+    integration_report: Optional[IntegrationReport] = None  # Engine A2, populated for code artefacts with repo URL

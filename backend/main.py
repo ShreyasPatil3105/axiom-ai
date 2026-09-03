@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,6 +15,7 @@ from engine_a2_integration.call_site_checker import check_call_site_compatibilit
 from engine_a2_integration.github_connector import clone_and_list_files
 import hashlib
 import json
+import time
 import subprocess
 import zipfile
 import tempfile
@@ -182,6 +187,28 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
         codebase_integration_score=integration_score,
     )
 
+<<<<<<< HEAD
+@app.post("/clone-repo")
+async def clone_repo(request: dict):
+    import time
+    repo_url = request.get("repo_url")
+    if not repo_url:
+        raise HTTPException(status_code=400, detail="Missing repo_url")
+    
+    # Import your github_connector function
+    from engine_a2_integration.github_connector import clone_and_list_files
+    
+    # Clone and list files
+    clone_path = "temp_clone_" + str(int(time.time()))
+    files = clone_and_list_files(repo_url, clone_path)
+    
+    return {
+        "status": "success",
+        "repo_url": repo_url,
+        "total_files": len(files),
+        "files": files[:20]
+    }
+=======
 @app.post("/verify-zip")
 async def verify_zip_endpoint(req: VerifyZipRequest) -> IntegrationReport:
     """Accept a ZIP file path, extract it, and run Engine A2 on the extracted folder."""
@@ -230,3 +257,4 @@ async def verify_zip_endpoint(req: VerifyZipRequest) -> IntegrationReport:
         call_site_checks=checks,
         codebase_integration_score=integration_score,
     )
+>>>>>>> b50f26b1cb08d7d5f5e665feacef7e41722dc9d5
