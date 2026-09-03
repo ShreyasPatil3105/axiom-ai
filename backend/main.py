@@ -142,14 +142,29 @@ async def get_status(audit_trail_id: str) -> dict:
 async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> IntegrationReport:
     """Run Engine A2: check if the migrated function integrates with the whole repo."""
     import time
+    import subprocess
+    import tempfile
+    import os
 
     start = time.time()
+    clone_path = None
+    
     if req.repo_url:
-        clone_path = "/tmp/axiom_clone"
+        print(f"Cloning repo: {req.repo_url}")
+        # Use Windows temp directory instead of /tmp/
+        clone_path = tempfile.mkdtemp(prefix="axiom_clone_")
+        from engine_a2_integration.github_connector import clone_and_list_files
         clone_and_list_files(req.repo_url, clone_path)
+        print(f"Clone complete. Path: {clone_path}")
         index = index_repo(clone_path)
-    else:
+        repo_path_for_commit = clone_path
+    elif req.repo_path:
+        print(f"Using local path: {req.repo_path}")
         index = index_repo(req.repo_path)
+        repo_path_for_commit = req.repo_path
+    else:
+        raise HTTPException(status_code=400, detail="Either repo_url or repo_path is required")
+
     indexing_time = time.time() - start
 
     call_sites = find_call_sites(index, req.target_function)
@@ -175,9 +190,24 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
     compatible = [c for c in resolvable if c.status == "COMPATIBLE"]
     integration_score = (len(compatible) / len(resolvable) * 100) if resolvable else 0.0
 
+    # Get commit SHA if possible
+    commit_sha = "unknown"
+    try:
+        if repo_path_for_commit and os.path.exists(os.path.join(repo_path_for_commit, ".git")):
+            result = subprocess.run(
+                ["git", "-C", repo_path_for_commit, "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                shell=True
+            )
+            if result.returncode == 0:
+                commit_sha = result.stdout.strip()[:8]
+    except Exception as e:
+        print(f"Error getting commit SHA: {e}")
+
     return IntegrationReport(
-        repo_url=req.repo_url or req.repo_path,
-        repo_commit_sha=subprocess.run(["git", "-C", clone_path if req.repo_url else req.repo_path, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()[:8],
+        repo_url=req.repo_url or req.repo_path or "unknown",
+        repo_commit_sha=commit_sha,
         target_function=req.target_function,
         total_files_indexed=index["total_files"],
         indexing_time_seconds=indexing_time,

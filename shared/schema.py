@@ -58,4 +58,4 @@ class Verdict(BaseModel):
     items: list[Union[CodeItem, ClaimItem]]
     generated_at: datetime = datetime.utcnow()
     verdict_hash: Optional[str] = None
-    integration_report: Optional[IntegrationReport] = None  # Engine A2, populated for code artefacts with repo URL
+    integration_report: Optional[IntegrationReport] = None
