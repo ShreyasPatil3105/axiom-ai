@@ -10,7 +10,7 @@ interface IntegrationInputProps {
 
 export default function IntegrationInput({ onVerify, isLoading }: IntegrationInputProps) {
   const [repoUrl, setRepoUrl] = useState("https://github.com/psf/requests");
-  const [targetFunction, setTargetFunction] = useState("requests.api.request");
+  const [targetFunction, setTargetFunction] = useState("request");
   const [newCode, setNewCode] = useState("");
   const [fileName, setFileName] = useState("");
 
@@ -38,14 +38,14 @@ export default function IntegrationInput({ onVerify, isLoading }: IntegrationInp
   // Quick test presets
   const setTestRequest = () => {
     setRepoUrl("https://github.com/psf/requests");
-    setTargetFunction("requests.api.request");
+    setTargetFunction("request");
     setNewCode("def request(method, url, **kwargs):\n    # Modified version\n    return _request(method, url, **kwargs)");
     setFileName("");
   };
 
   const setAxiomTest = () => {
     setRepoUrl("https://github.com/ShreyasPatil3105/axiom-ai.git");
-    setTargetFunction("engine_a_code.verify_code.verify_code");
+    setTargetFunction("verify_code");
     setNewCode("def verify_code(old_code, new_code):\n    # Modified version\n    return old_code == new_code");
     setFileName("");
   };
@@ -89,7 +89,7 @@ export default function IntegrationInput({ onVerify, isLoading }: IntegrationInp
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Target Function (module.function_name)
+          Target Function (function name)
         </label>
         <input
           type="text"
@@ -100,7 +100,7 @@ export default function IntegrationInput({ onVerify, isLoading }: IntegrationInp
           required
         />
         <p className="text-xs text-gray-400 mt-1">
-          The function you're migrating/updating. Format: module.function_name
+          The function you're migrating/updating. Use the simple function name (e.g. verify_code)
         </p>
       </div>
 

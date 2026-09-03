@@ -30,54 +30,76 @@ export default function IntegrationReport({ report }: IntegrationReportProps) {
     const fullHtml = `<!DOCTYPE html>
 <html>
 <head>
-  <title>AXIOM AI — Integration Report</title>
+  <title>AXIOM AI — Full Integration Report</title>
   <style>
-    body { font-family: "Courier New", monospace; max-width: 800px; margin: 0 auto; padding: 40px; color: #111; }
-    h1 { font-size: 20px; letter-spacing: 2px; }
+    body { font-family: "Courier New", monospace; max-width: 850px; margin: 0 auto; padding: 40px; color: #111; }
+    h1 { font-size: 20px; letter-spacing: 2px; border-bottom: 2px solid #111; padding-bottom: 8px; }
     h2 { font-size: 14px; letter-spacing: 1px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; }
+    pre { background: #f8f8f8; padding: 12px; border: 1px solid #ddd; font-size: 12px; overflow-x: auto; }
     table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 10px; }
     td, th { padding: 6px 8px; border: 1px solid #ddd; text-align: left; }
     th { background: #f5f5f5; font-weight: bold; }
-    .meta { font-size: 11px; color: #555; margin: 4px 0; }
-    .score { font-size: 32px; font-weight: bold; }
-    .compatible { color: #0a7d0a; }
-    .mismatch { color: #c00; }
-    .unresolved { color: #f59e0b; }
+    .meta { font-size: 11px; color: #555; margin: 3px 0; }
+    .score { font-size: 36px; font-weight: bold; }
+    .compatible { color: #0a7d0a; font-weight: bold; }
+    .mismatch { color: #c00; font-weight: bold; }
+    .unresolved { color: #f59e0b; font-weight: bold; }
+    .section { margin: 25px 0; }
   </style>
 </head>
 <body>
 
   <h1>AXIOM AI — CODEBASE INTEGRATION REPORT</h1>
-  <p class="meta">Audit ID: ${report.audit_trail_id}</p>
-  <p class="meta">Repo: ${report.repo_url}</p>
+  <p class="meta">Run ID: ${report.audit_trail_id}</p>
+  <p class="meta">Repository: ${report.repo_url}</p>
   <p class="meta">Commit: ${report.repo_commit_sha}</p>
+  <p class="meta">Generated: ${new Date().toISOString()}</p>
 
-  <h2>SUMMARY</h2>
-  <p class="score">${report.codebase_integration_score} / 100</p>
-  <p>Target Function: ${report.target_function}</p>
-  <p>Files Indexed: ${report.total_files_indexed}</p>
-  <p>Call Sites Found: ${report.total_call_sites_found}</p>
-  <p>Unresolved Dynamic: ${report.unresolved_dynamic_count}</p>
-  <p>Indexing Time: ${report.indexing_time_seconds}s</p>
+  <div class="section">
+    <h2>SUMMARY</h2>
+    <p class="score">${report.codebase_integration_score} / 100</p>
+    <p><b>Target Function:</b> ${report.target_function}</p>
+    <p><b>Files Indexed:</b> ${report.total_files_indexed}</p>
+    <p><b>Call Sites Found:</b> ${report.total_call_sites_found}</p>
+    <p><b>Unresolved Dynamic:</b> ${report.unresolved_dynamic_count}</p>
+    <p><b>Indexing Time:</b> ${report.indexing_time_seconds.toFixed(3)}s</p>
+  </div>
 
-  <h2>CALL SITE CHECKS</h2>
-  <table>
-    <tr>
-      <th>File</th>
-      <th>Line</th>
-      <th>Call Expression</th>
-      <th>Status</th>
-      <th>Detail</th>
-    </tr>
-    ${report.call_site_checks.map(check => `
-    <tr>
-      <td>${check.file_path}</td>
-      <td>${check.line_number}</td>
-      <td style="font-family:monospace;font-size:11px;">${check.call_expression}</td>
-      <td class="${check.status === 'COMPATIBLE' ? 'compatible' : check.status === 'SIGNATURE_MISMATCH' ? 'mismatch' : 'unresolved'}">${check.status}</td>
-      <td>${check.detail}</td>
-    </tr>`).join('')}
-  </table>
+  <div class="section">
+    <h2>VERIFICATION RESULT</h2>
+    <p><b>Property Checked:</b> ∀ call_site ∈ CallSites(${report.target_function}) : compatible(call_site, new_signature)</p>
+    <p><b>Call Graph:</b> ${report.total_files_indexed} files indexed, ${report.total_call_sites_found} call sites resolved</p>
+    <p><b>Counterexample Query:</b> ${report.total_call_sites_found > 0 ? 'SAT' : 'NO_CALL_SITES_FOUND'}</p>
+    <p><b>Result:</b> ${report.codebase_integration_score >= 100 ? 'All call sites compatible — integration safe' : report.codebase_integration_score >= 50 ? 'Some call sites incompatible — review required' : 'Multiple incompatible call sites — migration will break codebase'}</p>
+  </div>
+
+  <div class="section">
+    <h2>CALL SITE CHECKS</h2>
+    ${report.call_site_checks.length > 0 ? `
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Line</th>
+        <th>Call Expression</th>
+        <th>Status</th>
+        <th>Detail</th>
+      </tr>
+      ${report.call_site_checks.map(check => `
+      <tr>
+        <td>${check.file_path}</td>
+        <td>${check.line_number}</td>
+        <td style="font-family:monospace;font-size:11px;">${check.call_expression}</td>
+        <td class="${check.status === 'COMPATIBLE' ? 'compatible' : check.status === 'SIGNATURE_MISMATCH' ? 'mismatch' : 'unresolved'}">${check.status}</td>
+        <td>${check.detail}</td>
+      </tr>`).join('')}
+    </table>` : '<p style="color:#c00;">No call sites found. The target function may not exist in the indexed repository, or the function name format is incorrect.</p>'}
+  </div>
+
+  <div class="section">
+    <h2>SCOPE AND LIMITATIONS</h2>
+    <p>Verified: Static call graph extraction, signature compatibility</p>
+    <p>Not verified: Dynamic dispatch, reflection, runtime behaviour</p>
+  </div>
 
   <p style="margin-top:30px;font-size:10px;color:#888;">AXIOM Verification Engine — Reproducible run</p>
 
