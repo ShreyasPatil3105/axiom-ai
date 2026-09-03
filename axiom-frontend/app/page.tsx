@@ -9,10 +9,12 @@ import TabButton from "@/src/components/TabButton";
 import CodeInput from "@/src/components/CodeInput";
 import ClaimsInput from "@/src/components/ClaimsInput";
 import CertificateExport from "@/src/components/CertificateExport";
+import IntegrationReport from "@/src/components/IntegrationReport";
 import { verifyCode, verifyClaims } from "@/src/services/api";
 import { mockCodeVerdict, mockClaimVerdict } from "@/src/mock/verdictData";
+import mockIntegrationReport from "@/src/mock/integrationReportData";
 
-// Type for verdict items (matching the API response)
+// Type for verdict items
 interface CodeItem {
   id: string;
   status: "PROVEN" | "DISPROVEN" | "FUZZ_PASS" | "FUZZ_FAIL" | "TIMEOUT_INCONCLUSIVE";
@@ -60,13 +62,12 @@ interface Verdict {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"code" | "claims">("code");
+  const [activeTab, setActiveTab] = useState<"code" | "claims" | "integration">("code");
   const [isLoading, setIsLoading] = useState(false);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Code pairs for the diff (for demo code items)
-  // This is a fallback - in production, code comes from the backend
+  // Code pairs for the diff
   const codePairs: Record<string, { old: string; new: string }> = {
     "c1": {
       old: "def calculate_interest(principal, rate, years):\n    return principal * (1 + rate) ** years",
@@ -101,7 +102,6 @@ export default function Home() {
     } catch (err) {
       console.error("Code verification failed:", err);
       setError(err instanceof Error ? err.message : "Failed to verify code. Is the backend running?");
-      // Fallback to mock data for demo
       setVerdict({
         ...mockCodeVerdict,
         generated_at: new Date().toISOString()
@@ -125,7 +125,6 @@ export default function Home() {
     } catch (err) {
       console.error("Claims verification failed:", err);
       setError(err instanceof Error ? err.message : "Failed to verify claims. Is the backend running?");
-      // Fallback to mock data for demo
       setVerdict({
         ...mockClaimVerdict,
         generated_at: new Date().toISOString()
@@ -135,10 +134,7 @@ export default function Home() {
     }
   };
 
-  // Use the real verdict if available, otherwise fallback to mock based on tab
   const currentVerdict = verdict || (activeTab === "code" ? mockCodeVerdict : mockClaimVerdict);
-
-  // Determine if we're showing code or claims verdict
   const isCodeVerdict = currentVerdict.artefact_type === "code";
   const items = currentVerdict.items;
 
@@ -158,13 +154,12 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-8 py-6">
         {/* Tabs */}
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
           <TabButton
             active={activeTab === "code"}
             onClick={() => {
               setActiveTab("code");
               setError(null);
-              // Don't reset verdict - keep showing what we have
             }}
             label="Code Verification"
             icon="🖥️"
@@ -178,6 +173,15 @@ export default function Home() {
             label="Claim Grounding"
             icon="📄"
           />
+          <TabButton
+            active={activeTab === "integration"}
+            onClick={() => {
+              setActiveTab("integration");
+              setError(null);
+            }}
+            label="Integration Report"
+            icon="🔗"
+          />
         </div>
 
         {/* Error Banner */}
@@ -188,77 +192,90 @@ export default function Home() {
           </div>
         )}
 
-        {/* Input Form */}
-        <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
-          {activeTab === "code" ? (
-            <CodeInput onVerify={handleCodeVerify} isLoading={isLoading} />
-          ) : (
-            <ClaimsInput onVerify={handleClaimsVerify} isLoading={isLoading} />
-          )}
-        </div>
-
-        {/* Results */}
-        {currentVerdict && (
+        {/* Content based on active tab */}
+        {activeTab === "code" && (
           <>
-            {/* Audit ID */}
-            <div className="text-center mb-6">
-              <p className="text-xs text-gray-400">
-                Audit: {currentVerdict.audit_trail_id}
-              </p>
+            <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
+              <CodeInput onVerify={handleCodeVerify} isLoading={isLoading} />
             </div>
 
-            {/* Trust Score and Export Button */}
-            <div className="flex flex-col items-center mb-8">
-              <TrustRing score={currentVerdict.overall_trust_score} />
-              <div className="mt-4">
-                <CertificateExport verdict={currentVerdict} />
-              </div>
-            </div>
-
-            {/* Results */}
-            <div>
-              {isCodeVerdict ? (
+            {currentVerdict && (
+              <>
+                <div className="text-center mb-6">
+                  <p className="text-xs text-gray-400">Audit: {currentVerdict.audit_trail_id}</p>
+                </div>
+                <div className="flex flex-col items-center mb-8">
+                  <TrustRing score={currentVerdict.overall_trust_score} />
+                  <div className="mt-4">
+                    <CertificateExport verdict={currentVerdict} />
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 gap-4">
                   {items.map((item) => {
                     if (!('risk_tier' in item)) return null;
-                    
                     const pair = codePairs[item.id] || {
                       old: "// No code available",
                       new: "// No code available"
                     };
-                    
                     return (
-                      <CodeDiff
-                        key={item.id}
-                        item={item}
-                        oldCode={pair.old}
-                        newCode={pair.new}
-                      />
+                      <CodeDiff key={item.id} item={item} oldCode={pair.old} newCode={pair.new} />
                     );
                   })}
                 </div>
-              ) : (
+                <div className="mt-8 text-center text-xs text-gray-400 border-t pt-4">
+                  <p className="font-mono">Verdict Hash: {currentVerdict.verdict_hash}</p>
+                  <p className="mt-1">Generated: {currentVerdict.generated_at}</p>
+                  <p className="mt-1 text-gray-300">This certificate is tamper-evident — any change produces a different hash</p>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {activeTab === "claims" && (
+          <>
+            <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
+              <ClaimsInput onVerify={handleClaimsVerify} isLoading={isLoading} />
+            </div>
+
+            {currentVerdict && (
+              <>
+                <div className="text-center mb-6">
+                  <p className="text-xs text-gray-400">Audit: {currentVerdict.audit_trail_id}</p>
+                </div>
+                <div className="flex flex-col items-center mb-8">
+                  <TrustRing score={currentVerdict.overall_trust_score} />
+                  <div className="mt-4">
+                    <CertificateExport verdict={currentVerdict} />
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 gap-4">
                   {items.map((item) => {
                     if (!('claim_text' in item)) return null;
-                    
-                    return (
-                      <ClaimCard key={item.id} claim={item} />
-                    );
+                    return <ClaimCard key={item.id} claim={item} />;
                   })}
                 </div>
-              )}
-            </div>
+                <div className="mt-8 text-center text-xs text-gray-400 border-t pt-4">
+                  <p className="font-mono">Verdict Hash: {currentVerdict.verdict_hash}</p>
+                  <p className="mt-1">Generated: {currentVerdict.generated_at}</p>
+                  <p className="mt-1 text-gray-300">This certificate is tamper-evident — any change produces a different hash</p>
+                </div>
+              </>
+            )}
+          </>
+        )}
 
-            {/* Footer */}
-            <div className="mt-8 text-center text-xs text-gray-400 border-t pt-4">
-              <p className="font-mono">Verdict Hash: {currentVerdict.verdict_hash}</p>
-              <p className="mt-1">Generated: {currentVerdict.generated_at}</p>
-              <p className="mt-1 text-gray-300">
-                This certificate is tamper-evident — any change produces a different hash
+        {activeTab === "integration" && (
+          <div>
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+              <p className="font-medium">🔗 Codebase Integration</p>
+              <p className="text-xs mt-1 text-blue-600">
+                Shows how a migrated function integrates with the entire codebase — 
+                every call site, checked for compatibility.
               </p>
             </div>
-          </>
+            <IntegrationReport report={mockIntegrationReport} />
+          </div>
         )}
       </div>
     </main>

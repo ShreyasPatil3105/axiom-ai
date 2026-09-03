@@ -28,6 +28,7 @@ def check_call_site_compatibility(
     has_kwargs = func.args.kwarg is not None
 
     # Check for dynamic patterns we cannot statically resolve
+    call_expr = call_site.get("call_expression", "")
     dynamic_patterns = ['getattr', 'eval', 'exec', 'globals()', 'locals()', '__import__']
     call_lower = call_expr.lower()
     for pattern in dynamic_patterns:

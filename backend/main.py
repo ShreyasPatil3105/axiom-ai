@@ -17,6 +17,8 @@ import hashlib
 import json
 import time
 import subprocess
+import zipfile
+import tempfile
 
 app = FastAPI(title="AXIOM AI", description="Universal Verification Oracle")
 
@@ -43,6 +45,12 @@ class VerifyClaimsRequest(BaseModel):
 class VerifyIntegrationRequest(BaseModel):
     repo_path: Optional[str] = None
     repo_url: Optional[str] = None
+    target_function: str
+    new_function_code: str
+
+
+class VerifyZipRequest(BaseModel):
+    zip_path: str
     target_function: str
     new_function_code: str
 
@@ -179,6 +187,7 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
         codebase_integration_score=integration_score,
     )
 
+<<<<<<< HEAD
 @app.post("/clone-repo")
 async def clone_repo(request: dict):
     import time
@@ -199,3 +208,53 @@ async def clone_repo(request: dict):
         "total_files": len(files),
         "files": files[:20]
     }
+=======
+@app.post("/verify-zip")
+async def verify_zip_endpoint(req: VerifyZipRequest) -> IntegrationReport:
+    """Accept a ZIP file path, extract it, and run Engine A2 on the extracted folder."""
+    import time
+    import os
+
+    # Extract zip to temp directory
+    temp_dir = tempfile.mkdtemp(prefix="axiom_zip_")
+    with zipfile.ZipFile(req.zip_path, 'r') as zip_ref:
+        zip_ref.extractall(temp_dir)
+
+    start = time.time()
+    index = index_repo(temp_dir)
+    indexing_time = time.time() - start
+
+    call_sites = find_call_sites(index, req.target_function)
+    checks = []
+    unresolved_count = 0
+
+    for i, site in enumerate(call_sites):
+        result = check_call_site_compatibility(req.new_function_code, site)
+        if result["status"] == "UNRESOLVED_DYNAMIC":
+            unresolved_count += 1
+        checks.append(CallSiteCheck(
+            id=f"cs_{i}",
+            file_path=site["file_path"],
+            line_number=site["line_number"],
+            call_expression=site["call_expression"],
+            status=result["status"],
+            detail=result["detail"],
+            reproducible_command=f"python -c \"from engine_a2_integration.call_site_checker import check_call_site_compatibility; check_call_site_compatibility({repr(req.new_function_code)}, {site})\"",
+        ))
+
+    resolvable = [c for c in checks if c.status != "UNRESOLVED_DYNAMIC"]
+    compatible = [c for c in resolvable if c.status == "COMPATIBLE"]
+    integration_score = (len(compatible) / len(resolvable) * 100) if resolvable else 0.0
+
+    return IntegrationReport(
+        repo_url=req.zip_path,
+        repo_commit_sha="zip_extracted",
+        target_function=req.target_function,
+        total_files_indexed=index["total_files"],
+        indexing_time_seconds=indexing_time,
+        total_call_sites_found=len(call_sites),
+        unresolved_dynamic_count=unresolved_count,
+        call_site_checks=checks,
+        codebase_integration_score=integration_score,
+    )
+>>>>>>> b50f26b1cb08d7d5f5e665feacef7e41722dc9d5
