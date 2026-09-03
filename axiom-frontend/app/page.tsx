@@ -9,9 +9,10 @@ import TabButton from "@/src/components/TabButton";
 import CodeInput from "@/src/components/CodeInput";
 import ClaimsInput from "@/src/components/ClaimsInput";
 import CertificateExport from "@/src/components/CertificateExport";
+import { verifyCode, verifyClaims } from "@/src/services/api";
 import { mockCodeVerdict, mockClaimVerdict } from "@/src/mock/verdictData";
 
-// Type for verdict items
+// Type for verdict items (matching the API response)
 interface CodeItem {
   id: string;
   status: "PROVEN" | "DISPROVEN" | "FUZZ_PASS" | "FUZZ_FAIL" | "TIMEOUT_INCONCLUSIVE";
@@ -49,19 +50,23 @@ interface ClaimItem {
   reproducible_command: string;
 }
 
+interface Verdict {
+  audit_trail_id: string;
+  artefact_type: "code" | "claim_set";
+  overall_trust_score: number;
+  items: (CodeItem | ClaimItem)[];
+  generated_at: string;
+  verdict_hash: string;
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"code" | "claims">("code");
   const [isLoading, setIsLoading] = useState(false);
-  const [verdict, setVerdict] = useState<{
-    audit_trail_id: string;
-    artefact_type: "code" | "claim_set";
-    overall_trust_score: number;
-    items: (CodeItem | ClaimItem)[];
-    generated_at: string;
-    verdict_hash: string;
-  } | null>(null);
+  const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Code pairs for the diff (for demo code items)
+  // This is a fallback - in production, code comes from the backend
   const codePairs: Record<string, { old: string; new: string }> = {
     "c1": {
       old: "def calculate_interest(principal, rate, years):\n    return principal * (1 + rate) ** years",
@@ -85,35 +90,52 @@ export default function Home() {
     }
   };
 
-  // Simulate verification (will connect to real backend later)
-  const handleCodeVerify = (oldCode: string, newCode: string) => {
+  // Handle Code Verification
+  const handleCodeVerify = async (oldCode: string, newCode: string) => {
     setIsLoading(true);
-    
-    // Simulate API delay
-    setTimeout(() => {
-      // For demo, use the mock data
+    setError(null);
+
+    try {
+      const result = await verifyCode(oldCode, newCode);
+      setVerdict(result);
+    } catch (err) {
+      console.error("Code verification failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to verify code. Is the backend running?");
+      // Fallback to mock data for demo
       setVerdict({
         ...mockCodeVerdict,
         generated_at: new Date().toISOString()
       });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const handleClaimsVerify = (claimsText: string, sources: Array<{ name: string; text: string; doc_type: string; published_date: string }>) => {
+  // Handle Claims Verification
+  const handleClaimsVerify = async (
+    claimsText: string,
+    sources: Array<{ name: string; text: string; doc_type: string; published_date: string }>
+  ) => {
     setIsLoading(true);
-    
-    // Simulate API delay
-    setTimeout(() => {
-      // For demo, use the mock data
+    setError(null);
+
+    try {
+      const result = await verifyClaims(claimsText, sources);
+      setVerdict(result);
+    } catch (err) {
+      console.error("Claims verification failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to verify claims. Is the backend running?");
+      // Fallback to mock data for demo
       setVerdict({
         ...mockClaimVerdict,
         generated_at: new Date().toISOString()
       });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
+  // Use the real verdict if available, otherwise fallback to mock based on tab
   const currentVerdict = verdict || (activeTab === "code" ? mockCodeVerdict : mockClaimVerdict);
 
   // Determine if we're showing code or claims verdict
@@ -141,10 +163,8 @@ export default function Home() {
             active={activeTab === "code"}
             onClick={() => {
               setActiveTab("code");
-              // Reset to mock verdict for demo
-              if (!verdict || verdict.artefact_type !== "code") {
-                setVerdict(mockCodeVerdict);
-              }
+              setError(null);
+              // Don't reset verdict - keep showing what we have
             }}
             label="Code Verification"
             icon="🖥️"
@@ -153,15 +173,20 @@ export default function Home() {
             active={activeTab === "claims"}
             onClick={() => {
               setActiveTab("claims");
-              // Reset to mock verdict for demo
-              if (!verdict || verdict.artefact_type !== "claim_set") {
-                setVerdict(mockClaimVerdict);
-              }
+              setError(null);
             }}
             label="Claim Grounding"
             icon="📄"
           />
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <p className="font-medium">⚠️ {error}</p>
+            <p className="text-xs mt-1 text-red-500">Using mock data as fallback.</p>
+          </div>
+        )}
 
         {/* Input Form */}
         <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
