@@ -61,3 +61,23 @@ def verify_claims(claims_or_text: str, sources: list[dict], top_k: int = 3) -> l
         ))
 
     return results
+
+
+# Patch: Wire authority scores into the pipeline
+from engine_b_claims.authority_scorer import compute_authority_score, compute_freshness_decay
+
+# Store original function
+_original_verify_claims = verify_claims
+
+
+def verify_claims(claims_or_text: str, sources: list[dict], top_k: int = 3) -> list[ClaimItem]:
+    """Wrapper that adds authority scores and freshness decay to ClaimItems."""
+    items = _original_verify_claims(claims_or_text, sources, top_k)
+    for item in items:
+        # Find the source for this item
+        for src in sources:
+            if src["name"] == item.source_name:
+                item.authority_score = compute_authority_score(src.get("doc_type", "unknown"))
+                item.freshness_decay = compute_freshness_decay(src.get("published_date"))
+                break
+    return items
