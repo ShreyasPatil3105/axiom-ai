@@ -1,1 +1,0 @@
-{"verdict":"SUPPORTED","exact_span":"All AI systems shall ensure transparency in their operation","confidence":1.0}

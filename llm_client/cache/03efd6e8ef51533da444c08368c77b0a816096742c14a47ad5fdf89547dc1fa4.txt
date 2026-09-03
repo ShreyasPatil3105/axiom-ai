@@ -1,1 +1,0 @@
-{"verdict":"SUPPORTED","exact_span":"Water boils at 100 degrees Celsius at standard atmospheric pressure.","confidence":0.99}

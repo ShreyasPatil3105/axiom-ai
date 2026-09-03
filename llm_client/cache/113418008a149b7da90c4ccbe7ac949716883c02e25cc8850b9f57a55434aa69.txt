@@ -1,1 +1,0 @@
-["All AI systems are required to be open-source."]

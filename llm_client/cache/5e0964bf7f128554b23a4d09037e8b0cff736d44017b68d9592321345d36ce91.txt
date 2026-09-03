@@ -1,1 +1,0 @@
-{"verdict":"UNSUPPORTED","exact_span":"sufficiently transparent to enable users to interpret the system's output and use it appropriately","confidence":0.8}

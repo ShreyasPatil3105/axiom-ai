@@ -19,3 +19,4 @@ out/
 
 # Local cache
 backend/cache/*.json
+llm_client/cache/*.txt

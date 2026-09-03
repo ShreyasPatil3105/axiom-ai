@@ -1,1 +1,0 @@
-["AI systems shall be transparent in their operation."]
