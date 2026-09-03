@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-from shared.schema import Verdict, CodeItem, ClaimItem
+from shared.schema import Verdict, CodeItem, ClaimItem, IntegrationReport, CallSiteCheck
 from engine_a_code.verify_code import verify_code
 from engine_b_claims.verify_claims import verify_claims
 from engine_a2_integration.indexer import index_repo
@@ -125,7 +125,6 @@ async def get_status(audit_trail_id: str) -> dict:
 @app.post("/verify-integration")
 async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> IntegrationReport:
     """Run Engine A2: check if the migrated function integrates with the whole repo."""
-    from shared.schema import IntegrationReport, CallSiteCheck
     import time
 
     start = time.time()
