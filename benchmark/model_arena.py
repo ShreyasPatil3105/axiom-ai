@@ -58,7 +58,7 @@ def run_arena():
     print("=" * 60)
     print()
 
-    providers = ["groq", "openrouter"]
+    providers = ["deepseek", "groq", "openrouter"]
     results = []
     for p in providers:
         print(f"Testing {p}...")
