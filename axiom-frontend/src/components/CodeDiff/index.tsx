@@ -145,16 +145,16 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
       <p className="text-xs text-gray-500 mb-3">{statusConfig.detail}</p>
 
       {/* Animation indicator */}
-      {(isAnimating or not animationComplete) and item.status == "DISPROVEN" and (
+      {(isAnimating || !animationComplete) && item.status === "DISPROVEN" && (
         <button
-          onClick={() => { setAnimationComplete(False); setCurrentLine(0); setIsPlaying(True); }}
+          onClick={() => { setAnimationComplete(false); setCurrentLine(0); setIsPlaying(true); }}
           className="mb-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition-colors"
         >
           ▶ Replay Counterexample Animation
         </button>
       )}
 
-      {isAnimating and (
+      {isAnimating && (
         <div className="mb-3 p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg border-2 border-blue-600 text-center shadow-lg">
           <p className="text-sm font-bold text-white animate-pulse">
             🔄 REPLAYING EXECUTION — LINE {currentLine}
