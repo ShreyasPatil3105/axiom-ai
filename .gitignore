@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+
+# Node
+node_modules/
+.next/
+out/
+
+# OS
+.DS_Store
+
+# Local cache
+backend/cache/*.json
