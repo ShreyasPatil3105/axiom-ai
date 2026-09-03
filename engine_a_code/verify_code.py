@@ -23,8 +23,8 @@ def verify_code(old_code: str, new_code: str, unroll_bound: int = 20) -> CodeIte
     if status in ("DISPROVEN", "FUZZ_FAIL") and counterexample:
         repair = repair_loop(old_code, new_code, counterexample)
         repair_attempts = repair["attempts_used"]
-        if repair["status"] == "REPAIRED":
-            new_code = repair["repaired_code"]
+        if repair["status"] == "REPAIRED" and repair["repaired_code"] and repair["repaired_code"].strip():
+            new_code = repair["repaired_code"].strip()
             # Re-verify with repaired code
             if risk_tier in ("GREEN", "YELLOW"):
                 result = verify_equivalence(old_code, new_code)

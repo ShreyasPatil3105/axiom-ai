@@ -63,7 +63,7 @@ def encode_expr(node: ast.AST) -> str:
 def function_to_smt(code: str, name_prefix: str = "f") -> str:
     """Convert a Python function body to an SMT-LIB2 expression.
     Handles simple arithmetic, comparisons, if/elif/else, and bounded for loops."""
-    tree = ast.parse(code)
+    tree = ast.parse(code.strip())
     func = tree.body[0]
     if not isinstance(func, ast.FunctionDef):
         raise ValueError("Code must be a single function definition")

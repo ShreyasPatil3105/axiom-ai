@@ -4,12 +4,14 @@ from engine_a_code.ast_to_smt import function_to_smt
 
 def build_equivalence_query(old_code: str, new_code: str) -> str:
     """Build a full SMT-LIB2 query that asks: is there an input where old != new?"""
+    print(f"DEBUG old_code repr: {old_code!r}")
+    print(f"DEBUG new_code repr: {new_code!r}")
     old_smt = function_to_smt(old_code, "old_func")
     new_smt = function_to_smt(new_code, "new_func")
 
     # Extract parameter names from old code to declare as constants
     import ast
-    tree = ast.parse(old_code)
+    tree = ast.parse(old_code.strip())
     func = tree.body[0]
     params = [arg.arg for arg in func.args.args]
 

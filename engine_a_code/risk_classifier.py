@@ -39,7 +39,7 @@ def has_for_loop(tree: ast.AST) -> bool:
 def classify(code: str) -> str:
     """Classify code as GREEN (provable), YELLOW (provable with bounded loops),
     or RED (fuzz-only fallback)."""
-    tree = ast.parse(code)
+    tree = ast.parse(code.strip())
     func = tree.body[0]
     if not isinstance(func, ast.FunctionDef):
         raise ValueError("Code must be a single function definition")
