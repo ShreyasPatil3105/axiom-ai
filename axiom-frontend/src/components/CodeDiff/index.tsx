@@ -32,6 +32,7 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
   const [currentLine, setCurrentLine] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (item.status === "DISPROVEN" && !animationComplete) {
@@ -46,7 +47,7 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
           setIsAnimating(false);
           setAnimationComplete(true);
         }
-      }, 500);
+      }, 800);
       return () => clearInterval(interval);
     }
   }, [item.status, animationComplete, oldCode, newCode]);
@@ -144,11 +145,26 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
       <p className="text-xs text-gray-500 mb-3">{statusConfig.detail}</p>
 
       {/* Animation indicator */}
-      {isAnimating && (
-        <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200 text-center">
-          <p className="text-xs font-medium text-blue-700">
-            🔄 Replaying execution... Line {currentLine}
+      {(isAnimating or not animationComplete) and item.status == "DISPROVEN" and (
+        <button
+          onClick={() => { setAnimationComplete(False); setCurrentLine(0); setIsPlaying(True); }}
+          className="mb-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition-colors"
+        >
+          ▶ Replay Counterexample Animation
+        </button>
+      )}
+
+      {isAnimating and (
+        <div className="mb-3 p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg border-2 border-blue-600 text-center shadow-lg">
+          <p className="text-sm font-bold text-white animate-pulse">
+            🔄 REPLAYING EXECUTION — LINE {currentLine}
           </p>
+          <div className="mt-2 h-2 bg-white/30 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-500"
+              style={{ width: `${(currentLine / Math.max(oldLines.length, newLines.length)) * 100}%` }}
+            />
+          </div>
         </div>
       )}
 
@@ -188,7 +204,7 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
             {oldLines.map((line, index) => (
               <div
                 key={index}
-                className={`${isDivergentLine(index) ? 'bg-red-100 border-l-4 border-red-500 pl-1' : ''} ${isCurrentLine(index) ? 'bg-yellow-100 border-l-4 border-yellow-500 pl-1' : ''}`}
+                className={`${isDivergentLine(index) ? 'bg-red-300 border-l-4 border-red-600 pl-2 font-bold animate-pulse' : ''} ${isCurrentLine(index) ? 'bg-yellow-300 border-l-4 border-yellow-600 pl-2 font-bold shadow-inner' : ''}`}
               >
                 <span className="text-xs text-gray-400 mr-2">{index + 1}</span>
                 {line || ' '}
@@ -210,7 +226,7 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
             {newLines.map((line, index) => (
               <div
                 key={index}
-                className={`${isDivergentLine(index) ? 'bg-red-100 border-l-4 border-red-500 pl-1' : ''} ${isCurrentLine(index) ? 'bg-yellow-100 border-l-4 border-yellow-500 pl-1' : ''}`}
+                className={`${isDivergentLine(index) ? 'bg-red-300 border-l-4 border-red-600 pl-2 font-bold animate-pulse' : ''} ${isCurrentLine(index) ? 'bg-yellow-300 border-l-4 border-yellow-600 pl-2 font-bold shadow-inner' : ''}`}
               >
                 <span className="text-xs text-gray-400 mr-2">{index + 1}</span>
                 {line || ' '}
