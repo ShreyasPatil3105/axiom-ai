@@ -38,13 +38,14 @@ export default function CertificateExport({ verdict, label = "📄 Export Certif
         backgroundColor: "#ffffff"
       });
 
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`verdict-${verdict.audit_trail_id}.pdf`);
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write("<html><head><title>Verdict Certificate</title></head><body>" + certificateRef.current.innerHTML + "</body></html>");
+        printWindow.document.close();
+        printWindow.print();
+      } else {
+        throw new Error("Popup blocked");
+      }
     } catch (error) {
       console.error("Failed to export certificate:", error);
       alert("Failed to export certificate. Please try again.");
