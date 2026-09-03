@@ -187,7 +187,6 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
         codebase_integration_score=integration_score,
     )
 
-<<<<<<< HEAD
 @app.post("/clone-repo")
 async def clone_repo(request: dict):
     import time
@@ -208,7 +207,6 @@ async def clone_repo(request: dict):
         "total_files": len(files),
         "files": files[:20]
     }
-=======
 @app.post("/verify-zip")
 async def verify_zip_endpoint(req: VerifyZipRequest) -> IntegrationReport:
     """Accept a ZIP file path, extract it, and run Engine A2 on the extracted folder."""
@@ -257,4 +255,3 @@ async def verify_zip_endpoint(req: VerifyZipRequest) -> IntegrationReport:
         call_site_checks=checks,
         codebase_integration_score=integration_score,
     )
->>>>>>> b50f26b1cb08d7d5f5e665feacef7e41722dc9d5
