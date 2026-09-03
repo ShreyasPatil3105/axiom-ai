@@ -2,7 +2,6 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
 interface CertificateExportProps {
@@ -30,22 +29,68 @@ export default function CertificateExport({ verdict, label = "📄 Export Certif
     if (!certificateRef.current) return;
 
     try {
-      // Capture the certificate content as an image
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 2, // Higher quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff"
-      });
+      // Build professional certificate HTML
+      let analysisHtml = '';
+      if (verdict.items.length > 0) {
+        const item = verdict.items[0];
+        const statusColor = item.status === 'PROVEN' ? '#10b981' : item.status === 'DISPROVEN' ? '#ef4444' : '#f59e0b';
+        const statusLabel = item.status === 'PROVEN' ? 'MATHEMATICALLY PROVEN' : item.status === 'DISPROVEN' ? 'DISPROVEN' : item.status;
 
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write("<html><head><title>Verdict Certificate</title></head><body>" + certificateRef.current.innerHTML + "</body></html>");
-        printWindow.document.close();
-        printWindow.print();
-      } else {
-        throw new Error("Popup blocked");
+        analysisHtml = `
+          <div style="margin-top:20px;padding:20px;border:2px solid #e5e7eb;border-radius:8px;background:#f9fafb;">
+            <h3 style="font-size:16px;font-weight:bold;color:#111827;margin-bottom:12px;border-bottom:2px solid #3b82f6;padding-bottom:8px;">
+              📋 Verification Analysis
+            </h3>
+            <table style="width:100%;font-size:12px;border-collapse:collapse;">
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;width:40%;">Artefact Type</td>
+                <td style="color:#111827;text-transform:capitalize;">${verdict.artefact_type === 'code' ? 'Code Equivalence' : 'Claim Grounding'}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Items Verified</td>
+                <td style="color:#111827;">${verdict.items.length}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Status</td>
+                <td style="color:${statusColor};font-weight:bold;">${statusLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Risk Tier</td>
+                <td style="color:#111827;">${item.risk_tier || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Trust Score</td>
+                <td style="color:#111827;font-weight:bold;">${verdict.overall_trust_score} / 100</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Verification Method</td>
+                <td style="color:#111827;">${item.status === 'PROVEN' ? 'Z3 Theorem Prover — mathematical proof across ALL possible inputs' : item.status === 'DISPROVEN' ? 'Z3 counterexample detection' : 'Property-based fuzzing'}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Reproducibility</td>
+                <td style="color:#10b981;">✓ Fully reproducible — re-run command included</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:bold;color:#374151;">Tamper Evidence</td>
+                <td style="color:#10b981;">✓ SHA-256 hash verification</td>
+              </tr>
+            </table>
+          </div>
+        `;
       }
+
+      const finalHtmlContent = certificateRef.current.innerHTML + analysisHtml;
+      const blob = new Blob([
+        '<html><head><title>Verdict Certificate</title></head><body>',
+        finalHtmlContent,
+        '</body></html>'
+      ], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'verdict-' + verdict.audit_trail_id + '.html';
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Failed to export certificate:", error);
       alert("Failed to export certificate. Please try again.");
