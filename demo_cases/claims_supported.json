@@ -1,0 +1,13 @@
+{
+  "name": "Supported claim — water boiling point",
+  "claims_or_text": "Water boils at 100 degrees Celsius at sea level.",
+  "sources": [
+    {
+      "name": "Standard Physics Reference",
+      "text": "Water boils at 100 degrees Celsius at standard atmospheric pressure. This is a fundamental property of water.",
+      "doc_type": "statutory",
+      "published_date": "2024-01-15"
+    }
+  ],
+  "expected": "SUPPORTED"
+}

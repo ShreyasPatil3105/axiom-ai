@@ -1,0 +1,6 @@
+{
+  "name": "Clean code pair — additive commutativity",
+  "old_code": "def add(a: int, b: int) -> int:\n    return a + b",
+  "new_code": "def add(a: int, b: int) -> int:\n    return b + a",
+  "expected": "PROVEN"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Disputed claim — conflicting sources on boiling point",
+  "claims_or_text": "Water boils at 100 degrees Celsius at sea level.",
+  "sources": [
+    {
+      "name": "Standard Physics Reference",
+      "text": "Water boils at 100 degrees Celsius at standard atmospheric pressure.",
+      "doc_type": "statutory",
+      "published_date": "2024-01-15"
+    },
+    {
+      "name": "Unverified Online Post",
+      "text": "Water actually boils at 95 degrees Celsius at sea level, not 100.",
+      "doc_type": "unattributed",
+      "published_date": "2023-06-20"
+    }
+  ],
+  "expected": "DISPUTED"
+}
