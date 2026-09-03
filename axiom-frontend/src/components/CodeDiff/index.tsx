@@ -1,5 +1,7 @@
 // src/components/CodeDiff/index.tsx
 
+import { useState, useEffect } from "react";
+
 interface CodeItem {
   id: string;
   status: "PROVEN" | "DISPROVEN" | "FUZZ_PASS" | "FUZZ_FAIL" | "TIMEOUT_INCONCLUSIVE";
@@ -26,6 +28,30 @@ interface CodeDiffProps {
 }
 
 export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
+  // Counterexample replay animation state
+  const [currentLine, setCurrentLine] = useState<number>(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (item.status === "DISPROVEN" && !animationComplete) {
+      setIsAnimating(true);
+      const totalLines = Math.max(oldCode.split("\n").length, newCode.split("\n").length);
+      let line = 0;
+      const interval = setInterval(() => {
+        line++;
+        setCurrentLine(line);
+        if (line >= totalLines) {
+          clearInterval(interval);
+          setIsAnimating(false);
+          setAnimationComplete(true);
+        }
+      }, 800);
+      return () => clearInterval(interval);
+    }
+  }, [item.status, animationComplete, oldCode, newCode]);
+
   // Get color and label for status badge
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -84,15 +110,16 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
   const oldLines = oldCode.split('\n');
   const newLines = newCode.split('\n');
 
-  // Check if a line should be highlighted (for DISPROVEN)
-  const isDivergentLine = (lineIndex: number, isOld: boolean) => {
+  // Check if a line should be highlighted as currently executing
+  const isCurrentLine = (lineIndex: number) => {
+    return isAnimating && lineIndex + 1 === currentLine;
+  };
+
+  // Check if a line is the divergent line (highlighted red at animation end)
+  const isDivergentLine = (lineIndex: number) => {
     if (item.status !== "DISPROVEN" || !item.localisation) return false;
-    
-    if (isOld) {
-      return lineIndex === item.localisation.line - 1; // Convert 1-based to 0-based
-    } else {
-      return lineIndex === item.localisation.line - 1;
-    }
+    if (!animationComplete && isAnimating) return false;
+    return lineIndex + 1 === item.localisation.line;
   };
 
   return (
@@ -116,6 +143,30 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
 
       {/* Status detail */}
       <p className="text-xs text-gray-500 mb-3">{statusConfig.detail}</p>
+
+      {/* Animation indicator */}
+      {(isAnimating || !animationComplete) && item.status === "DISPROVEN" && (
+        <button
+          onClick={() => { setAnimationComplete(false); setCurrentLine(0); setIsPlaying(true); }}
+          className="mb-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition-colors"
+        >
+          ▶ Replay Counterexample Animation
+        </button>
+      )}
+
+      {isAnimating && (
+        <div className="mb-3 p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg border-2 border-blue-600 text-center shadow-lg">
+          <p className="text-sm font-bold text-white animate-pulse">
+            🔄 REPLAYING EXECUTION — LINE {currentLine}
+          </p>
+          <div className="mt-2 h-2 bg-white/30 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-500"
+              style={{ width: `${(currentLine / Math.max(oldLines.length, newLines.length)) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Counterexample (for DISPROVEN) */}
       {item.status === "DISPROVEN" && item.counterexample && (
@@ -153,12 +204,15 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
             {oldLines.map((line, index) => (
               <div
                 key={index}
-                className={`${isDivergentLine(index, true) ? 'bg-red-100 border-l-4 border-red-500 pl-1' : ''}`}
+                className={`${isDivergentLine(index) ? 'bg-red-300 border-l-4 border-red-600 pl-2 font-bold animate-pulse' : ''} ${isCurrentLine(index) ? 'bg-yellow-300 border-l-4 border-yellow-600 pl-2 font-bold shadow-inner' : ''}`}
               >
                 <span className="text-xs text-gray-400 mr-2">{index + 1}</span>
                 {line || ' '}
-                {isDivergentLine(index, true) && (
+                {isDivergentLine(index) && (
                   <span className="text-xs text-red-600 ml-2">← Divergence</span>
+                )}
+                {isCurrentLine(index) && (
+                  <span className="text-xs text-blue-600 ml-2">← Executing</span>
                 )}
               </div>
             ))}
@@ -172,12 +226,15 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
             {newLines.map((line, index) => (
               <div
                 key={index}
-                className={`${isDivergentLine(index, false) ? 'bg-red-100 border-l-4 border-red-500 pl-1' : ''}`}
+                className={`${isDivergentLine(index) ? 'bg-red-300 border-l-4 border-red-600 pl-2 font-bold animate-pulse' : ''} ${isCurrentLine(index) ? 'bg-yellow-300 border-l-4 border-yellow-600 pl-2 font-bold shadow-inner' : ''}`}
               >
                 <span className="text-xs text-gray-400 mr-2">{index + 1}</span>
                 {line || ' '}
-                {isDivergentLine(index, false) && (
+                {isDivergentLine(index) && (
                   <span className="text-xs text-red-600 ml-2">← Divergence</span>
+                )}
+                {isCurrentLine(index) && (
+                  <span className="text-xs text-blue-600 ml-2">← Executing</span>
                 )}
               </div>
             ))}

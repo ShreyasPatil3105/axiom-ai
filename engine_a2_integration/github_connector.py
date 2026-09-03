@@ -50,5 +50,5 @@ if __name__ == "__main__":
     
     # Clean up after test
     #if os.path.exists(test_path):
-     #   shutil.rmtree(test_path)
-      #  print("Cleaned up temporary clone.")
+        #shutil.rmtree(test_path)
+        #print("Cleaned up temporary clone.")
