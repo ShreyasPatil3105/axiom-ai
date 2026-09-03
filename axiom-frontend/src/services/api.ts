@@ -1,7 +1,7 @@
 // src/services/api.ts
 
-// Use relative path with proxy - this avoids CORS issues
-const API_BASE_URL = '/api';
+// Direct backend URL - NO proxy!
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // Verify Code
 export const verifyCode = async (oldCode: string, newCode: string) => {

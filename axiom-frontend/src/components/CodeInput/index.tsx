@@ -9,11 +9,12 @@ interface CodeInputProps {
 }
 
 export default function CodeInput({ onVerify, isLoading }: CodeInputProps) {
+  // Updated with type annotations for Z3 compatibility
   const [oldCode, setOldCode] = useState(
-    "def calculate_interest(principal, rate, years):\n    return principal * (1 + rate) ** years"
+    "def add(a: int, b: int) -> int:\n    return a + b"
   );
   const [newCode, setNewCode] = useState(
-    "def calculate_interest(principal, rate, years):\n    return principal * (1 + rate) * years"
+    "def add(a: int, b: int) -> int:\n    return b + a"  // Clean pair - should PROVE
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,8 +24,49 @@ export default function CodeInput({ onVerify, isLoading }: CodeInputProps) {
     }
   };
 
+  // Quick test presets for demo
+  const setCleanPair = () => {
+    setOldCode("def add(a: int, b: int) -> int:\n    return a + b");
+    setNewCode("def add(a: int, b: int) -> int:\n    return b + a");
+  };
+
+  const setBuggyPair = () => {
+    setOldCode("def add(a: int, b: int) -> int:\n    return a + b");
+    setNewCode("def add(a: int, b: int) -> int:\n    return a - b");
+  };
+
+  const setInterestPair = () => {
+    setOldCode("def calculate_interest(principal: float, rate: float, years: int) -> float:\n    return principal * (1 + rate) ** years");
+    setNewCode("def calculate_interest(principal: float, rate: float, years: int) -> float:\n    return principal * (1 + rate) * years");
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Quick test buttons */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        <button
+          type="button"
+          onClick={setCleanPair}
+          className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+        >
+          ✅ Clean Pair (should PROVE)
+        </button>
+        <button
+          type="button"
+          onClick={setBuggyPair}
+          className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+        >
+          ❌ Buggy Pair (should DISPROVE)
+        </button>
+        <button
+          type="button"
+          onClick={setInterestPair}
+          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+        >
+          💰 Interest Calculator (buggy)
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Old Code */}
         <div>
