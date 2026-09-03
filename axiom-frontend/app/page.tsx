@@ -11,6 +11,7 @@ import ClaimsInput from "@/src/components/ClaimsInput";
 import CertificateExport from "@/src/components/CertificateExport";
 import IntegrationReport from "@/src/components/IntegrationReport";
 import IntegrationInput from "@/src/components/IntegrationInput";
+import ModelArena from "@/src/components/ModelArena";
 import { verifyCode, verifyClaims } from "@/src/services/api";
 import { mockCodeVerdict, mockClaimVerdict } from "@/src/mock/verdictData";
 import mockIntegrationReport from "@/src/mock/integrationReportData";
@@ -63,7 +64,7 @@ interface Verdict {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"code" | "claims" | "integration">("code");
+  const [activeTab, setActiveTab] = useState<"code" | "claims" | "integration" | "arena">("code");
   const [isLoading, setIsLoading] = useState(false);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -218,6 +219,15 @@ export default function Home() {
             label="Integration Report"
             icon="🔗"
           />
+          <TabButton
+            active={activeTab === "arena"}
+            onClick={() => {
+              setActiveTab("arena");
+              setError(null);
+            }}
+            label="Model Arena"
+            icon="🏟️"
+          />
         </div>
 
         {/* Error Banner */}
@@ -330,6 +340,20 @@ export default function Home() {
                 <IntegrationReport report={integrationReport || mockIntegrationReport} />
               </>
             )}
+          </div>
+        )}
+
+        {/* Model Arena Tab */}
+        {activeTab === "arena" && (
+          <div>
+            <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg text-purple-700 text-sm">
+              <p className="font-medium">🏟️ Model Arena — Section 6.3</p>
+              <p className="text-xs mt-1 text-purple-600">
+                Compare DeepSeek, Groq, and OpenRouter on the code repair task.
+                Which model is "good enough" for triage?
+              </p>
+            </div>
+            <ModelArena />
           </div>
         )}
       </div>
