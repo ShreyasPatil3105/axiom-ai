@@ -33,6 +33,11 @@ export default function CodeInput({ onVerify, isLoading }: CodeInputProps) {
   const setBuggyPair = () => {
     setOldCode("def add(a: int, b: int) -> int:\n    return a + b");
     setNewCode("def add(a: int, b: int) -> int:\n    return a - b");
+    // Auto-trigger verification after a short delay
+    setTimeout(() => {
+      const form = document.querySelector("form");
+      if (form) form.requestSubmit();
+    }, 300);
   };
 
   const setInterestPair = () => {
