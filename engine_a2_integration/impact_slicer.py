@@ -16,8 +16,9 @@ def find_call_sites(index: dict, target_function: str) -> list[dict]:
             caller_name = func['qualified_name']
 
             for call in func.get('calls', []):
-                # Match direct name or qualified name
-                if call == target_function or call.endswith('.' + target_function):
+                # Extract the function name from the full call expression
+                call_name = call.split('(')[0].strip()
+                if call_name == target_function or call_name.endswith('.' + target_function):
                     call_sites.append({
                         'file_path': file_path,
                         'line_number': func['lineno'],

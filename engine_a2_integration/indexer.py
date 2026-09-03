@@ -65,13 +65,17 @@ def extract_function_info(node: ast.FunctionDef, parent_class: str | None = None
         })
 
     # Find all Call expressions inside the function body
+    # Use ast.unparse on the full Call node to capture arguments too
     calls = []
     for subnode in ast.walk(node):
         if isinstance(subnode, ast.Call):
-            if isinstance(subnode.func, ast.Name):
-                calls.append(subnode.func.id)
-            elif isinstance(subnode.func, ast.Attribute):
-                calls.append(ast.unparse(subnode.func))
+            try:
+                calls.append(ast.unparse(subnode))
+            except Exception:
+                if isinstance(subnode.func, ast.Name):
+                    calls.append(subnode.func.id)
+                elif isinstance(subnode.func, ast.Attribute):
+                    calls.append(ast.unparse(subnode.func))
 
     return {
         "qualified_name": qualified_name,
