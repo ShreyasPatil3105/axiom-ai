@@ -10,21 +10,23 @@ Built for Microsoft Innovation Club, VIT Chennai | 3–4 September 2026 | Proble
 
 ## What It Does
 
-AXIOM AI verifies two types of AI-generated artefacts:
+AXIOM AI verifies three types of AI-generated artefacts:
 
-1. **Code Equivalence** (Engine A): Proves whether translated/migrated code behaves identically to the original, using Z3 Theorem Prover for formal proof and property-based fuzzing as fallback.
+1. **Code Equivalence** (Engine A): Proves whether translated/migrated code behaves identically to the original, using Z3 Theorem Prover for formal proof and property-based fuzzing as fallback. Counterexample Replay Animation shows divergence in real time.
 
-2. **Claim Grounding** (Engine B): Checks whether factual claims are supported by source documents, with explicit entailment checking, source authority scoring, and dispute surfacing.
+2. **Claim Grounding** (Engine B): Checks whether factual claims are supported by source documents, with explicit entailment checking, source authority scoring, and dispute surfacing. Supports .txt and .docx file uploads as sources.
 
-Both engines produce a **Verdict Certificate** — a reproducible audit trail with a tamper-evident hash.
+3. **Codebase Integration** (Engine A2): Given a repo URL, local path, or ZIP file, indexes the entire codebase statically, finds every call site for a target function, and checks signature compatibility deterministically — no LLM for discovery.
+
+All engines produce a **Verdict Certificate** — a reproducible audit trail with a tamper-evident SHA-256 hash.
 
 ---
 
 ## Tech Stack
 
-- **Backend:** Python, FastAPI, Z3, Hypothesis
-- **LLM:** Groq (openai/gpt-oss-20b) via OpenAI-compatible client
-- **Frontend:** Next.js, Tailwind CSS (in axiom-frontend/)
+- **Backend:** Python, FastAPI, Z3, Hypothesis, GitPython
+- **LLM:** DeepSeek, Groq, OpenRouter (automatic fallback chain)
+- **Frontend:** Next.js 16, Tailwind CSS 4, TypeScript (in axiom-frontend/)
 - **PDF Export:** ReportLab
 
 ---
@@ -36,9 +38,9 @@ Both engines produce a **Verdict Certificate** — a reproducible audit trail wi
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install z3-solver hypothesis fastapi uvicorn python-dotenv openai sentence-transformers reportlab
+pip install z3-solver hypothesis fastapi uvicorn python-dotenv openai sentence-transformers reportlab GitPython
 cp .env.example .env
-# Add your Groq API key to .env
+# Add your API keys to .env
 uvicorn backend.main:app --reload --port 8000
 ```
 
@@ -58,6 +60,8 @@ npm run dev
 |---|---|---|---|
 | /verify-code | POST | {old_code, new_code} | Verdict (code) |
 | /verify-claims | POST | {claims_or_text, sources} | Verdict (claim_set) |
+| /verify-integration | POST | {repo_path or repo_url, target_function, new_function_code} | IntegrationReport |
+| /verify-zip | POST | {zip_path, target_function, new_function_code} | IntegrationReport |
 | /status/{id} | GET | — | Stored verdict |
 
 ---
@@ -76,6 +80,11 @@ All demo cases are in demo_cases/:
 
 ## Model Arena
 
-Run `python benchmark/model_arena.py` to see LLM provider comparison.
+Run `python benchmark/model_arena.py` to compare LLM providers on the repair task.
 
-Current result: Groq (openai/gpt-oss-20b) repairs buggy code in 1 attempt, 0.05s.
+Current results:
+| Provider | Success | Time |
+|---|---|---|
+| DeepSeek | ✅ | 1.58s |
+| Groq | ✅ | 1.14s |
+| OpenRouter | ✅ | 1.06s |
