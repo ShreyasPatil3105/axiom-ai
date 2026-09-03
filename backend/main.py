@@ -8,6 +8,7 @@ from engine_b_claims.verify_claims import verify_claims
 from engine_a2_integration.indexer import index_repo
 from engine_a2_integration.impact_slicer import find_call_sites
 from engine_a2_integration.call_site_checker import check_call_site_compatibility
+from engine_a2_integration.github_connector import clone_and_list_files
 import hashlib
 import json
 
@@ -34,7 +35,8 @@ class VerifyClaimsRequest(BaseModel):
 
 
 class VerifyIntegrationRequest(BaseModel):
-    repo_path: str
+    repo_path: Optional[str] = None
+    repo_url: Optional[str] = None
     target_function: str
     new_function_code: str
 
@@ -128,7 +130,12 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
     import time
 
     start = time.time()
-    index = index_repo(req.repo_path)
+    if req.repo_url:
+        clone_path = "/tmp/axiom_clone"
+        clone_and_list_files(req.repo_url, clone_path)
+        index = index_repo(clone_path)
+    else:
+        index = index_repo(req.repo_path)
     indexing_time = time.time() - start
 
     call_sites = find_call_sites(index, req.target_function)
@@ -155,7 +162,7 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
     integration_score = (len(compatible) / len(resolvable) * 100) if resolvable else 0.0
 
     return IntegrationReport(
-        repo_url=req.repo_path,
+        repo_url=req.repo_url or req.repo_path,
         repo_commit_sha="local",
         target_function=req.target_function,
         total_files_indexed=index["total_files"],
