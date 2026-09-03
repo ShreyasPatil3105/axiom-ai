@@ -26,6 +26,73 @@ interface IntegrationReportProps {
 }
 
 export default function IntegrationReport({ report }: IntegrationReportProps) {
+  const handleExportReport = () => {
+    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <title>AXIOM AI — Integration Report</title>
+  <style>
+    body { font-family: "Courier New", monospace; max-width: 800px; margin: 0 auto; padding: 40px; color: #111; }
+    h1 { font-size: 20px; letter-spacing: 2px; }
+    h2 { font-size: 14px; letter-spacing: 1px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; }
+    table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 10px; }
+    td, th { padding: 6px 8px; border: 1px solid #ddd; text-align: left; }
+    th { background: #f5f5f5; font-weight: bold; }
+    .meta { font-size: 11px; color: #555; margin: 4px 0; }
+    .score { font-size: 32px; font-weight: bold; }
+    .compatible { color: #0a7d0a; }
+    .mismatch { color: #c00; }
+    .unresolved { color: #f59e0b; }
+  </style>
+</head>
+<body>
+
+  <h1>AXIOM AI — CODEBASE INTEGRATION REPORT</h1>
+  <p class="meta">Audit ID: ${report.audit_trail_id}</p>
+  <p class="meta">Repo: ${report.repo_url}</p>
+  <p class="meta">Commit: ${report.repo_commit_sha}</p>
+
+  <h2>SUMMARY</h2>
+  <p class="score">${report.codebase_integration_score} / 100</p>
+  <p>Target Function: ${report.target_function}</p>
+  <p>Files Indexed: ${report.total_files_indexed}</p>
+  <p>Call Sites Found: ${report.total_call_sites_found}</p>
+  <p>Unresolved Dynamic: ${report.unresolved_dynamic_count}</p>
+  <p>Indexing Time: ${report.indexing_time_seconds}s</p>
+
+  <h2>CALL SITE CHECKS</h2>
+  <table>
+    <tr>
+      <th>File</th>
+      <th>Line</th>
+      <th>Call Expression</th>
+      <th>Status</th>
+      <th>Detail</th>
+    </tr>
+    ${report.call_site_checks.map(check => `
+    <tr>
+      <td>${check.file_path}</td>
+      <td>${check.line_number}</td>
+      <td style="font-family:monospace;font-size:11px;">${check.call_expression}</td>
+      <td class="${check.status === 'COMPATIBLE' ? 'compatible' : check.status === 'SIGNATURE_MISMATCH' ? 'mismatch' : 'unresolved'}">${check.status}</td>
+      <td>${check.detail}</td>
+    </tr>`).join('')}
+  </table>
+
+  <p style="margin-top:30px;font-size:10px;color:#888;">AXIOM Verification Engine — Reproducible run</p>
+
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'axiom-integration-report-' + report.audit_trail_id.substring(0, 8) + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Get status color and label
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -53,7 +120,15 @@ export default function IntegrationReport({ report }: IntegrationReportProps) {
     <div className="border rounded-lg p-6 shadow-sm bg-white">
       {/* Header */}
       <div className="border-b pb-4 mb-4">
-        <h3 className="text-lg font-bold text-gray-800">🔗 Codebase Integration Report</h3>
+        <div className="flex justify-between items-center">
+      <h3 className="text-lg font-bold text-gray-800">🔗 Codebase Integration Report</h3>
+      <button
+        onClick={handleExportReport}
+        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all text-sm font-medium"
+      >
+        📋 Export Full Report
+      </button>
+    </div>
         <p className="text-sm text-gray-500">
           Target Function: <span className="font-mono text-gray-700">{report.target_function}</span>
         </p>
