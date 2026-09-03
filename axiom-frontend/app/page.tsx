@@ -10,6 +10,7 @@ import CodeInput from "@/src/components/CodeInput";
 import ClaimsInput from "@/src/components/ClaimsInput";
 import CertificateExport from "@/src/components/CertificateExport";
 import IntegrationReport from "@/src/components/IntegrationReport";
+import IntegrationInput from "@/src/components/IntegrationInput";
 import { verifyCode, verifyClaims } from "@/src/services/api";
 import { mockCodeVerdict, mockClaimVerdict } from "@/src/mock/verdictData";
 import mockIntegrationReport from "@/src/mock/integrationReportData";
@@ -66,6 +67,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [integrationReport, setIntegrationReport] = useState<any>(null);
 
   // Code pairs for the diff
   const codePairs: Record<string, { old: string; new: string }> = {
@@ -134,6 +136,40 @@ export default function Home() {
     }
   };
 
+  // Handle Integration Verification
+  const handleIntegrationVerify = async (repoUrl: string, targetFunction: string, newCode: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/verify-integration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+          target_function: targetFunction,
+          new_function_code: newCode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setIntegrationReport(data);
+    } catch (err) {
+      console.error("Integration verification failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to verify integration. Is the backend running?");
+      // Fallback to mock data
+      setIntegrationReport(mockIntegrationReport);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const currentVerdict = verdict || (activeTab === "code" ? mockCodeVerdict : mockClaimVerdict);
   const isCodeVerdict = currentVerdict.artefact_type === "code";
   const items = currentVerdict.items;
@@ -192,7 +228,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Content based on active tab */}
+        {/* Code Tab */}
         {activeTab === "code" && (
           <>
             <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
@@ -232,6 +268,7 @@ export default function Home() {
           </>
         )}
 
+        {/* Claims Tab */}
         {activeTab === "claims" && (
           <>
             <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
@@ -265,16 +302,34 @@ export default function Home() {
           </>
         )}
 
+        {/* Integration Tab */}
         {activeTab === "integration" && (
           <div>
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
               <p className="font-medium">🔗 Codebase Integration</p>
               <p className="text-xs mt-1 text-blue-600">
-                Shows how a migrated function integrates with the entire codebase — 
-                every call site, checked for compatibility.
+                Enter a GitHub repo URL, target function, and the new function code.
+                AXIOM AI will scan the entire codebase and check every call site for compatibility.
               </p>
             </div>
-            <IntegrationReport report={mockIntegrationReport} />
+
+            <div className="mb-8 bg-white rounded-lg shadow-sm p-6 border">
+              <IntegrationInput 
+                onVerify={handleIntegrationVerify} 
+                isLoading={isLoading} 
+              />
+            </div>
+
+            {(integrationReport || error) && (
+              <>
+                <div className="text-center mb-6">
+                  <p className="text-xs text-gray-400">
+                    Audit: {integrationReport?.audit_trail_id || 'integration-audit-001'}
+                  </p>
+                </div>
+                <IntegrationReport report={integrationReport || mockIntegrationReport} />
+              </>
+            )}
           </div>
         )}
       </div>
