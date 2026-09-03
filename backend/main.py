@@ -11,6 +11,7 @@ from engine_a2_integration.call_site_checker import check_call_site_compatibilit
 from engine_a2_integration.github_connector import clone_and_list_files
 import hashlib
 import json
+import subprocess
 
 app = FastAPI(title="AXIOM AI", description="Universal Verification Oracle")
 
@@ -163,7 +164,7 @@ async def verify_integration_endpoint(req: VerifyIntegrationRequest) -> Integrat
 
     return IntegrationReport(
         repo_url=req.repo_url or req.repo_path,
-        repo_commit_sha="local",
+        repo_commit_sha=subprocess.run(["git", "-C", clone_path if req.repo_url else req.repo_path, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()[:8],
         target_function=req.target_function,
         total_files_indexed=index["total_files"],
         indexing_time_seconds=indexing_time,

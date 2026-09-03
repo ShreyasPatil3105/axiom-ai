@@ -27,6 +27,16 @@ def check_call_site_compatibility(
     has_varargs = func.args.vararg is not None
     has_kwargs = func.args.kwarg is not None
 
+    # Check for dynamic patterns we cannot statically resolve
+    dynamic_patterns = ['getattr', 'eval', 'exec', 'globals()', 'locals()', '__import__']
+    call_lower = call_expr.lower()
+    for pattern in dynamic_patterns:
+        if pattern in call_lower:
+            return {
+                "status": "UNRESOLVED_DYNAMIC",
+                "detail": f"Call expression contains dynamic pattern '{pattern}' which cannot be statically resolved",
+            }
+
     # Check if the call expression uses named args that no longer exist
     call_expr = call_site.get('call_expression', '')
     if '(' in call_expr:
@@ -56,5 +66,23 @@ def check_call_site_compatibility(
                     "status": "SIGNATURE_MISMATCH",
                     "detail": f"Call site provides {len(positional_args)} positional args but new function requires {required_params}",
                 }
+
+    # Check for side-effect changes (writes to globals, self, or passed objects)
+    side_effect_nodes = []
+    for subnode in ast.walk(func):
+        if isinstance(subnode, ast.Assign):
+            for target in subnode.targets:
+                if isinstance(target, ast.Name) and target.id in func.args.args[0].arg if hasattr(func.args.args[0], 'arg') else False:
+                    pass  # Assignment to local param — not a side effect
+                elif isinstance(target, ast.Attribute):
+                    side_effect_nodes.append(ast.unparse(target))
+        elif isinstance(subnode, ast.Global):
+            side_effect_nodes.extend(subnode.names)
+
+    if side_effect_nodes:
+        return {
+            "status": "SIDE_EFFECT_CHANGED",
+            "detail": f"New function writes to external state: {', '.join(side_effect_nodes[:3])}",
+        }
 
     return {"status": "COMPATIBLE", "detail": "Signature check passed"}
