@@ -199,7 +199,7 @@ async def clone_repo(request: dict):
     from engine_a2_integration.github_connector import clone_and_list_files
     
     # Clone and list files
-    clone_path = "temp_clone_" + str(int(time.time()))
+    clone_path = "/tmp/" + "temp_clone_" + str(int(time.time()))
     files = clone_and_list_files(repo_url, clone_path)
     
     return {
