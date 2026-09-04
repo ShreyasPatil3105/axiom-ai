@@ -1,3 +1,8 @@
+# engine_a_code/fuzz_fallback.py
+
+import ast
+import random
+from typing import Any, Dict, List, Tuple
 import random
 from typing import Optional
 
