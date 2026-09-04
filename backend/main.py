@@ -104,6 +104,9 @@ def compute_claims_trust_score(items: list[ClaimItem]) -> float:
         return 0.0
     return weighted_sum / weight_sum
 
+@app.get("/")
+def root():
+    return {"message": "AXIOM AI Backend is running", "docs": "/docs"}
 
 @app.post("/verify-code")
 async def verify_code_endpoint(req: VerifyCodeRequest) -> Verdict:
