@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+z3-solver
+hypothesis
+openai
+sentence-transformers
+reportlab
+GitPython
+networkx
+mammoth

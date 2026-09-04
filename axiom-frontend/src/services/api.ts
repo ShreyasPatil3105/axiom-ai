@@ -1,7 +1,7 @@
 // src/services/api.ts
 
 // Direct backend URL - NO proxy!
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = 'https://axiom-ai-xcv0.onrender.com';  // YOUR Render URL
 
 // Verify Code
 export const verifyCode = async (oldCode: string, newCode: string) => {
