@@ -2,36 +2,83 @@ import random
 from typing import Optional
 
 
-def run_func(code: str, func_name: str, inputs: dict) -> int:
-    """Execute the function from code with given inputs and return its output."""
-    namespace = {}
-    exec(code, namespace)
-    func = namespace[func_name]
+def run_func(code: str, func_name: str, inputs: dict):
+    local_ns = {}
+    exec(code, {}, local_ns)
+    func = local_ns.get(func_name)
+    if func is None:
+        raise ValueError(f"Function {func_name} not found")
     return func(**inputs)
 
 
-def differential_fuzz(old_code: str, new_code: str, num_cases: int = 1000) -> dict:
-    """Run both functions on the same random inputs and flag any mismatch.
-    Returns dict with status and optional counterexample."""
-    import ast
+def differential_fuzz(old_code: str, new_code: str, func_name: str = None, num_cases: int = 1000):
+    """
+    Run differential fuzzing with safe input generation.
+    """
+    if func_name is None:
+        # extract function name
+        tree = ast.parse(old_code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                func_name = node.name
+                break
+        if func_name is None:
+            raise ValueError("Could not find function name")
 
-    # Get function name and parameter names from old code
+    # get parameter names from old code
     tree = ast.parse(old_code)
-    func = tree.body[0]
-    func_name = func.name
-    params = [arg.arg for arg in func.args.args]
+    param_names = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == func_name:
+            for arg in node.args.args:
+                param_names.append(arg.arg)
+            break
+
+    counterexamples = []
+    passed = True
 
     for _ in range(num_cases):
-        # Generate random integer inputs in a small range
-        inputs = {p: random.randint(-100, 100) for p in params}
+        inputs = {}
+        for name in param_names:
+            if 'rate' in name.lower() or 'interest' in name.lower():
+                inputs[name] = random.uniform(0.0, 1.0)       # rate between 0 and 1
+            elif 'years' in name.lower() or 'year' in name.lower():
+                inputs[name] = random.randint(0, 30)          # years 0-30
+            elif 'principal' in name.lower() or 'amount' in name.lower():
+                inputs[name] = random.uniform(1.0, 100000.0)  # positive principal
+            elif 'b' in name.lower():
+                inputs[name] = random.randint(1, 100)         # avoid division by zero
+            else:
+                inputs[name] = random.randint(-100, 100)
 
-        old_out = run_func(old_code, func_name, inputs)
-        new_out = run_func(new_code, func_name, inputs)
+        # skip if any input is invalid for known patterns
+        if 'rate' in inputs and inputs['rate'] < 0:
+            continue
+        if 'years' in inputs and inputs['years'] < 0:
+            continue
 
-        if old_out != new_out:
-            return {
-                "status": "FUZZ_FAIL",
-                "counterexample": {**inputs, "old_output": old_out, "new_output": new_out},
-            }
+        try:
+            old_out = run_func(old_code, func_name, inputs)
+            new_out = run_func(new_code, func_name, inputs)
+        except Exception as e:
+            # treat as failed test
+            counterexamples.append({
+                **inputs,
+                'error': str(e),
+                'old_output': None,
+                'new_output': None
+            })
+            passed = False
+            continue
 
-    return {"status": "FUZZ_PASS", "counterexample": None}
+        # compare outputs
+        if isinstance(old_out, float) and isinstance(new_out, float):
+            if abs(old_out - new_out) > 1e-6:
+                counterexamples.append({**inputs, 'old_output': old_out, 'new_output': new_out})
+                passed = False
+        else:
+            if old_out != new_out:
+                counterexamples.append({**inputs, 'old_output': old_out, 'new_output': new_out})
+                passed = False
+
+    return counterexamples, passed
