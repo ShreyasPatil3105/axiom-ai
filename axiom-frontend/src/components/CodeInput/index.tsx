@@ -54,21 +54,21 @@ export default function CodeInput({ onVerify, isLoading }: CodeInputProps) {
           onClick={setCleanPair}
           className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
         >
-          ✅ Clean Pair (should PROVE)
+          Clean Pair (should PROVE)
         </button>
         <button
           type="button"
           onClick={setBuggyPair}
           className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
         >
-          ❌ Buggy Pair (should DISPROVE)
+          Buggy Pair (should DISPROVE)
         </button>
         <button
           type="button"
           onClick={setInterestPair}
           className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
         >
-          💰 Interest Calculator (buggy)
+          Interest Calculator (buggy)
         </button>
       </div>
 
@@ -113,7 +113,7 @@ export default function CodeInput({ onVerify, isLoading }: CodeInputProps) {
           }
         `}
       >
-        {isLoading ? 'Verifying...' : '🔍 Verify Code Equivalence'}
+        {isLoading ? 'Verifying...' : 'Verify Code Equivalence'}
       </button>
     </form>
   );

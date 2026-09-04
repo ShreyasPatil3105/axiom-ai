@@ -148,7 +148,7 @@ export default function IntegrationReport({ report }: IntegrationReportProps) {
         onClick={handleExportReport}
         className="px-3 py-1.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all text-sm font-medium"
       >
-        📋 Export Full Report
+        Export Full Report
       </button>
     </div>
         <p className="text-sm text-gray-500">

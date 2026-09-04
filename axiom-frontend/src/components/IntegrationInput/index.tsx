@@ -59,14 +59,14 @@ export default function IntegrationInput({ onVerify, isLoading }: IntegrationInp
           onClick={setTestRequest}
           className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
         >
-          🔗 Test: requests repo
+          Test: requests repo
         </button>
         <button
           type="button"
           onClick={setAxiomTest}
           className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
         >
-          🔗 Test: axiom-ai repo
+          Test: axiom-ai repo
         </button>
       </div>
 
@@ -121,7 +121,7 @@ export default function IntegrationInput({ onVerify, isLoading }: IntegrationInp
               onChange={handleFileUpload}
               className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
-            {fileName && <span className="text-sm text-green-600">✅ {fileName}</span>}
+            {fileName && <span className="text-sm text-green-600">{fileName}</span>}
           </div>
           <p className="text-xs text-gray-400 mt-1">
             Upload a .py file with your new function code. Or paste below.
@@ -156,7 +156,7 @@ export default function IntegrationInput({ onVerify, isLoading }: IntegrationInp
           }
         `}
       >
-        {isLoading ? '🔍 Scanning Repository...' : '🔗 Verify Integration'}
+        {isLoading ? 'Scanning Repository...' : 'Verify Integration'}
       </button>
     </form>
   );

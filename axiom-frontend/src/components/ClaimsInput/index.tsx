@@ -178,21 +178,21 @@ export default function ClaimsInput({ onVerify, isLoading }: ClaimsInputProps) {
           onClick={setSupportedClaim}
           className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
         >
-          ✅ Supported Claim
+          Supported Claim
         </button>
         <button
           type="button"
           onClick={setContradictedClaim}
           className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
         >
-          ❌ Contradicted Claim
+          Contradicted Claim
         </button>
         <button
           type="button"
           onClick={setDisputedClaim}
           className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors"
         >
-          ⚠️ Disputed Claim
+          Disputed Claim
         </button>
       </div>
 
@@ -251,9 +251,9 @@ export default function ClaimsInput({ onVerify, isLoading }: ClaimsInputProps) {
   onChange={(e) => setDocType(e.target.value)}
   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
 >
-  <option value="statutory">⚖️ Official Law/Regulation</option>
-  <option value="vendor">🏢 Company Documentation</option>
-  <option value="unattributed">📝 Random Internet Source</option>
+  <option value="statutory">Official Law/Regulation</option>
+  <option value="vendor">Company Documentation</option>
+  <option value="unattributed">Random Internet Source</option>
 </select>
         </div>
 
@@ -335,7 +335,7 @@ export default function ClaimsInput({ onVerify, isLoading }: ClaimsInputProps) {
           }
         `}
       >
-        {isLoading ? 'Verifying...' : '🔍 Verify Claims'}
+        {isLoading ? 'Verifying...' : 'Verify Claims'}
       </button>
     </form>
   );

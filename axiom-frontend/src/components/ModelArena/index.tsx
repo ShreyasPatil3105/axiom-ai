@@ -158,21 +158,21 @@ export default function ModelArena() {
           onClick={() => setTestPreset(0)}
           className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
         >
-          🔧 Add (a-b)
+          Add (a-b)
         </button>
         <button
           type="button"
           onClick={() => setTestPreset(1)}
           className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
         >
-          💰 Interest Calculator
+          Interest Calculator
         </button>
         <button
           type="button"
           onClick={() => setTestPreset(2)}
           className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
         >
-          🔄 Reverse String
+          Reverse String
         </button>
         <button
           type="button"
@@ -213,7 +213,7 @@ export default function ModelArena() {
               className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {uploadedFile && (
-              <span className="text-sm text-green-600">✅ Uploaded: {uploadedFile}</span>
+              <span className="text-sm text-green-600">Uploaded: {uploadedFile}</span>
             )}
           </div>
           <textarea
@@ -256,12 +256,12 @@ export default function ModelArena() {
           }
         `}
       >
-        {isLoading ? '⏳ Testing Providers...' : '🏃 Run Arena'}
+        {isLoading ? 'Testing Providers...' : '🏃 Run Arena'}
       </button>
 
       {error && (
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm">
-          ⚠️ {error} — Using mock data
+          {error} — Using mock data
         </div>
       )}
 
@@ -286,11 +286,11 @@ export default function ModelArena() {
                     <td className="px-4 py-3">
                       {result.success ? (
                         <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          ✅ Success
+                          Success
                         </span>
                       ) : (
                         <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                          ❌ Failed
+                          Failed
                         </span>
                       )}
                     </td>

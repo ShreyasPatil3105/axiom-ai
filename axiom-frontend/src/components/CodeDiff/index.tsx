@@ -58,31 +58,31 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
       case "PROVEN":
         return { 
           color: "bg-green-100 text-green-800 border-green-300", 
-          label: "✅ Mathematically Proven",
+          label: "Mathematically Proven",
           detail: "Z3 verified across ALL possible inputs"
         };
       case "DISPROVEN":
         return { 
           color: "bg-red-100 text-red-800 border-red-300", 
-          label: "❌ Disproven",
+          label: "Disproven",
           detail: "Counterexample found"
         };
       case "FUZZ_PASS":
         return { 
           color: "bg-blue-100 text-blue-800 border-blue-300", 
-          label: "🔵 Passed Fuzz Testing",
+          label: "Passed Fuzz Testing",
           detail: "Tested with 10,000 random inputs"
         };
       case "FUZZ_FAIL":
         return { 
           color: "bg-red-100 text-red-800 border-red-300", 
-          label: "❌ Fuzz Test Failed",
+          label: "Fuzz Test Failed",
           detail: "Mismatch found during fuzzing"
         };
       case "TIMEOUT_INCONCLUSIVE":
         return { 
           color: "bg-gray-100 text-gray-700 border-gray-300", 
-          label: "⚪ Inconclusive",
+          label: "Inconclusive",
           detail: "Z3 timed out"
         };
       default:
@@ -150,14 +150,14 @@ export default function CodeDiff({ item, oldCode, newCode }: CodeDiffProps) {
           onClick={() => { setAnimationComplete(false); setCurrentLine(0); setIsPlaying(true); }}
           className="mb-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition-colors"
         >
-          ▶ Replay Counterexample Animation
+          Replay Counterexample Animation
         </button>
       )}
 
       {isAnimating && (
         <div className="mb-3 p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg border-2 border-blue-600 text-center shadow-lg">
           <p className="text-sm font-bold text-white animate-pulse">
-            🔄 REPLAYING EXECUTION — LINE {currentLine}
+            REPLAYING EXECUTION — LINE {currentLine}
           </p>
           <div className="mt-2 h-2 bg-white/30 rounded-full overflow-hidden">
             <div 

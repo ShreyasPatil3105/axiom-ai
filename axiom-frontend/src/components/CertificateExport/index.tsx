@@ -16,7 +16,7 @@ interface CertificateExportProps {
   label?: string;
 }
 
-export default function CertificateExport({ verdict, label = "📄 Export Certificate" }: CertificateExportProps) {
+export default function CertificateExport({ verdict, label = "Export Certificate" }: CertificateExportProps) {
   const certificateRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -253,10 +253,10 @@ export default function CertificateExport({ verdict, label = "📄 Export Certif
       case "FUZZ_PASS": return "PASSED FUZZ TESTING";
       case "FUZZ_FAIL": return "FUZZ TEST FAILED";
       case "TIMEOUT_INCONCLUSIVE": return "INCONCLUSIVE";
-      case "SUPPORTED": return "✅ Supported";
-      case "CONTRADICTED": return "❌ Contradicted";
-      case "UNSUPPORTED": return "⚪ No Evidence";
-      case "DISPUTED": return "⚠️ Disputed";
+      case "SUPPORTED": return "Supported";
+      case "CONTRADICTED": return "Contradicted";
+      case "UNSUPPORTED": return "No Evidence";
+      case "DISPUTED": return "Disputed";
       default: return status;
     }
   };
@@ -366,7 +366,7 @@ export default function CertificateExport({ verdict, label = "📄 Export Certif
         onClick={handleExportFullReport}
         className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-200 flex items-center gap-2 text-sm font-medium"
       >
-        📋 Export Full Report
+        Export Full Report
       </button>
     </div>
   );

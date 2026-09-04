@@ -27,13 +27,13 @@ export default function ClaimCard({ claim }: ClaimCardProps) {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "SUPPORTED":
-        return { color: "bg-green-100 text-green-800 border-green-300", label: "✅ Supported" };
+        return { color: "bg-green-100 text-green-800 border-green-300", label: "Supported" };
       case "CONTRADICTED":
-        return { color: "bg-red-100 text-red-800 border-red-300", label: "❌ Contradicted" };
+        return { color: "bg-red-100 text-red-800 border-red-300", label: "Contradicted" };
       case "UNSUPPORTED":
-        return { color: "bg-gray-100 text-gray-700 border-gray-300", label: "⚪ No Evidence" };
+        return { color: "bg-gray-100 text-gray-700 border-gray-300", label: "No Evidence" };
       case "DISPUTED":
-        return { color: "bg-yellow-100 text-yellow-800 border-yellow-300", label: "⚠️ Disputed" };
+        return { color: "bg-yellow-100 text-yellow-800 border-yellow-300", label: "Disputed" };
       default:
         return { color: "bg-gray-100 text-gray-700 border-gray-300", label: "Unknown" };
     }
@@ -115,7 +115,7 @@ export default function ClaimCard({ claim }: ClaimCardProps) {
       {/* For DISPUTED — show both conflicting sources */}
       {claim.status === "DISPUTED" && claim.conflicting_sources && (
         <div className="mb-3">
-          <p className="text-xs font-medium text-gray-500 mb-2">⚠️ Sources disagree:</p>
+          <p className="text-xs font-medium text-gray-500 mb-2">Sources disagree:</p>
           <div className="grid grid-cols-1 gap-2">
             {claim.conflicting_sources.map((source, index) => (
               <div key={index} className="p-2 rounded border text-sm">
