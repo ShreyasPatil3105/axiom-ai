@@ -199,7 +199,7 @@ export default function Home() {
               setError(null);
             }}
             label="Code Verification"
-            icon="🖥️"
+            icon=""
           />
           <TabButton
             active={activeTab === "claims"}
@@ -208,7 +208,7 @@ export default function Home() {
               setError(null);
             }}
             label="Claim Grounding"
-            icon="📄"
+            icon=""
           />
           <TabButton
             active={activeTab === "integration"}
@@ -217,7 +217,7 @@ export default function Home() {
               setError(null);
             }}
             label="Integration Report"
-            icon="🔗"
+            icon=""
           />
           <TabButton
             active={activeTab === "arena"}
@@ -226,14 +226,14 @@ export default function Home() {
               setError(null);
             }}
             label="Model Arena"
-            icon="🏟️"
+            icon=""
           />
         </div>
 
         {/* Error Banner */}
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            <p className="font-medium">⚠️ {error}</p>
+            <p className="font-medium">{error}</p>
             <p className="text-xs mt-1 text-red-500">Using mock data as fallback.</p>
           </div>
         )}
@@ -316,7 +316,7 @@ export default function Home() {
         {activeTab === "integration" && (
           <div>
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
-              <p className="font-medium">🔗 Codebase Integration</p>
+              <p className="font-medium">Codebase Integration</p>
               <p className="text-xs mt-1 text-blue-600">
                 Enter a GitHub repo URL, target function, and the new function code.
                 AXIOM AI will scan the entire codebase and check every call site for compatibility.
@@ -347,7 +347,7 @@ export default function Home() {
         {activeTab === "arena" && (
           <div>
             <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg text-purple-700 text-sm">
-              <p className="font-medium">🏟️ Model Arena — Section 6.3</p>
+              <p className="font-medium">Model Arena — Section 6.3</p>
               <p className="text-xs mt-1 text-purple-600">
                 Compare DeepSeek, Groq, and OpenRouter on the code repair task.
                 Which model is "good enough" for triage?
